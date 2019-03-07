@@ -1,0 +1,17 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+      "tslint:recommended"
+    ],
+    "linterOptions": {
+      "include": [
+        "./kcd-publisher-timer/*.ts",
+        "./kcd-publisher-trigger/*.ts"
+      ]
+    },
+    "jsRules": {},
+    "rules": {
+      "no-var-requires": false
+    },
+    "rulesDirectory": []
+  }

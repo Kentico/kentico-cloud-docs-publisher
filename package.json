@@ -9,9 +9,12 @@
     "start:host": "func start",
     "start": "npm run start:host & npm run watch",
     "build:production": "npm run prestart && npm prune --production",
-    "test": "echo \"No tests yet...\""
+    "test": "echo \"No tests yet...\"",
+    "tslint": "tslint --project tsconfig.json ./kcd-publisher-timer/*.ts ./kcd-publisher-trigger/*.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tslint": "^5.13.1"
+  },
   "devDependencies": {
     "@azure/functions": "^1.0.1-beta2",
     "typescript": "^3.3.3"

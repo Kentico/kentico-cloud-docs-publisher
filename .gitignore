@@ -17,6 +17,8 @@ yarn-error.log*
 /packages
 /TestResults
 
+dist/
+
 .idea/*
 .env
 

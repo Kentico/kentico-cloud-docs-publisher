@@ -5,6 +5,7 @@
 	],
 	"linterOptions": {
 		"include": [
+			"./shared/utils.test.ts",
 			"./kcd-publisher-timer/*.ts",
 			"./kcd-publisher-trigger/*.ts"
 		]
@@ -15,6 +16,9 @@
 		"quotemark": [
 			true,
 			"single"
+		],
+		"semicolon": [
+			false
 		]
 	},
 	"rulesDirectory": []

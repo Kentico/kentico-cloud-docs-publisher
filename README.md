@@ -1,3 +1,7 @@
+| [master](https://github.com/Kentico/kentico-cloud-docs-search/tree/master) | [develop](https://github.com/Kentico/kentico-cloud-docs-search/tree/develop) |
+|:---:|:---:|
+| [![Build Status](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher.svg?branch=master)](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/9f0fc490-0009-46ec-9e38-ad4a83442713)](https://codebeat.co/projects/github-com-kentico-kentico-cloud-docs-publisher-master) | [![Build Status](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher.svg?branch=develop)](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/c265105a-2af3-4b3d-b983-c6442b745652)](https://codebeat.co/projects/github-com-kentico-kentico-cloud-docs-publisher-develop) |
+
 # Kentico Cloud Documentation - Publisher
 
 Backend function for Kentico Cloud documentation portal, which utilizes [Kentico Cloud](https://app.kenticocloud.com/) as a source of its content.

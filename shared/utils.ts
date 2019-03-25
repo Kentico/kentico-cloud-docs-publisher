@@ -13,6 +13,30 @@ import { contentManagementClient } from './external/kenticoClient';
 require('dotenv').config();
 const parser = require('node-html-parser');
 
+export const sendNotification =
+  async (codename: string, itemId: string, errorMessage: string): Promise<AxiosResponse | void> => {
+    const errorText = `Publishing of content item **${codename}** has failed.`;
+    const errorTextEscaped = errorText.replace(/_/g, '\\\_');
+
+    return await axios.post(
+      process.env.NOTIFICATIONS_URL || '',
+      {
+        '@@context': 'https://schema.org/extensions',
+        '@@type': 'MessageCard',
+        'sections': [
+          {
+            activityImage: 'https://img.icons8.com/color/100/000000/close-window.png',
+            activityTitle: 'Publishing of one or more items has failed.',
+            text: `${errorTextEscaped}  ${errorMessage}: ` +
+              `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
+              `${process.env.PROJECT_ID}/content-inventory/${EmptyGuid}/content/${itemId})`,
+          },
+        ],
+        'summary': 'One Help Portal - publishing failed',
+        'themeColor': 'C93636',
+      });
+  };
+
 export const getWorkflowStepOfItem = async (codename: string): Promise<string> => {
   const response =
     await contentManagementClient
@@ -29,16 +53,24 @@ export const publishDefaultLanguageVariant = async (item: ContentItem | undefine
     return;
   }
 
-  const itemWorkflowStep = await getWorkflowStepOfItem(item.system.codename);
-  const isPublished = itemWorkflowStep === WorkflowPublishedId;
-  const isArchived = itemWorkflowStep === WorkflowArchivedId;
+  try {
+    const itemWorkflowStep = await getWorkflowStepOfItem(item.system.codename);
+    const isPublished = itemWorkflowStep === WorkflowPublishedId;
+    const isArchived = itemWorkflowStep === WorkflowArchivedId;
 
-  if (!isPublished && !isArchived) {
-    await contentManagementClient
-      .publishOrScheduleLanguageVariant()
-      .byItemId(item.system.id)
-      .byLanguageId(EmptyGuid)
-      .toPromise();
+    if (!isPublished && !isArchived) {
+      await contentManagementClient
+        .publishOrScheduleLanguageVariant()
+        .byItemId(item.system.id)
+        .byLanguageId(EmptyGuid)
+        .toPromise();
+    }
+  } catch (error) {
+    await sendNotification(
+      item.system.codename,
+      item.system.id,
+      error.message,
+    );
   }
 };
 

@@ -3,14 +3,16 @@ require('dotenv').config();
 export const EmptyGuid = '00000000-0000-0000-0000-000000000000';
 export const FiveMinutes = 300000;
 
-export const WorkflowCascadePublishId = process.env.CASCADE_PUBLISH_ID;
-export const WorkflowScheduledId = process.env.SCHEDULED_ID;
-export const WorkflowPublishedId = process.env.PUBLISHED_ID;
-export const WorkflowArchivedId = process.env.ARCHIVED_ID;
+export const ProjectId = process.env['KC.ProjectId'] || '';
+export const PreviewApiKey = process.env['KC.PreviewApiKey'] || '';
+export const ContentManagementApiKey = process.env['KC.ContentManagementApiKey'] || '';
+export const NotificationUrl = process.env['Teams.NotificationUrl'] || '';
 
-export const InternalApiBaseAddress = `https://app.kenticocloud.com/api/project/${process.env.PROJECT_ID}`;
+export const WorkflowCascadePublishId = process.env['KC.Step.CascadePublishId'];
+export const WorkflowScheduledId = process.env['KC.Step.ScheduledPublishId'];
+export const WorkflowPublishedId = process.env['KC.Step.PublishId'];
+export const WorkflowArchivedId = process.env['KC.Step.ArchivedId'];
 
-export const PreviewApiKey = process.env.PREVIEW_API_KEY || '';
-export const ContentManagementApiKey = process.env.CM_API_KEY || '';
+export const InternalApiBaseAddress = `https://app.kenticocloud.com/api/project/${ProjectId}`;
 
-export const InternalDraftApiHeader = { Authorization: `Bearer ${process.env.DRAFT_API_TOKEN}` };
+export const InternalDraftApiHeader = { Authorization: `Bearer ${process.env['KC.InternalApiToken']}` };

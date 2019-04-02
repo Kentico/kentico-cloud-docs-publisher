@@ -5,6 +5,8 @@ import {
   FiveMinutes,
   InternalApiBaseAddress,
   InternalDraftApiHeader,
+  NotificationUrl,
+  ProjectId,
   WorkflowArchivedId,
   WorkflowPublishedId,
 } from './constants';
@@ -19,7 +21,7 @@ export const sendNotification =
     const errorTextEscaped = errorText.replace(/_/g, '\\\_');
 
     return await axios.post(
-      process.env.NOTIFICATIONS_URL || '',
+      NotificationUrl,
       {
         '@@context': 'https://schema.org/extensions',
         '@@type': 'MessageCard',
@@ -29,7 +31,7 @@ export const sendNotification =
             activityTitle: 'Publishing of one or more items has failed.',
             text: `${errorTextEscaped}  ${errorMessage}: ` +
               `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
-              `${process.env.PROJECT_ID}/content-inventory/${EmptyGuid}/content/${itemId})`,
+              `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`,
           },
         ],
         'summary': 'One Help Portal - publishing failed',

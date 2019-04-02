@@ -6,6 +6,7 @@ import {
 import {
   ContentManagementApiKey,
   PreviewApiKey,
+  ProjectId,
 } from '../constants';
 import { CodeSamples } from '../models/code_samples';
 import { MultiplatformArticle } from '../models/multiplatform_article';
@@ -20,11 +21,11 @@ const typeResolvers = [
 export const deliveryClient = new DeliveryClient({
   enablePreviewMode: true,
   previewApiKey: PreviewApiKey,
-  projectId: process.env.PROJECT_ID || '',
+  projectId: ProjectId,
   typeResolvers,
 });
 
 export const contentManagementClient = new ContentManagementClient({
   apiKey: ContentManagementApiKey,
-  projectId: process.env.PROJECT_ID || '',
+  projectId: ProjectId,
 });

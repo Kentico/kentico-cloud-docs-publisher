@@ -89,20 +89,15 @@ export const getLinkedItemsCodenames = (item: ContentItem): string[] => {
 };
 
 const parseRichtextContent = (content: string): string[] => {
-  const linkedItemsCodenames: string[] = [];
   const root = parser.parse(content);
   const objectElements = root.querySelectorAll('object');
 
-  for (const objectElement of objectElements) {
-    const isKenticoCloudType = objectElement.rawAttributes.type === 'application/kenticocloud';
-    const isLink = objectElement.rawAttributes['data-rel'] === 'link';
-
-    if (isKenticoCloudType && isLink) {
-      linkedItemsCodenames.push(objectElement.rawAttributes['data-codename']);
-    }
-  }
-
-  return linkedItemsCodenames;
+  return objectElements
+    .filter((objectElement: any) =>
+      objectElement.rawAttributes.type === 'application/kenticocloud' &&
+      objectElement.rawAttributes['data-type'] === 'item' &&
+      objectElement.rawAttributes['data-rel'] === 'link')
+    .map((objectElement: any) => objectElement.rawAttributes['data-codename']);
 };
 
 export const getScheduledPublishTime = async (itemId: string): Promise<string> => {

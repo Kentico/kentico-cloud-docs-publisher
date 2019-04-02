@@ -5,7 +5,7 @@ import {
   FiveMinutes,
   InternalApiBaseAddress,
   InternalDraftApiHeader,
-  NotificationUrl,
+  NotificationUrls,
   ProjectId,
   WorkflowArchivedId,
   WorkflowPublishedId,
@@ -16,13 +16,12 @@ require('dotenv').config();
 const parser = require('node-html-parser');
 
 export const sendNotification =
-  async (codename: string, itemId: string, errorMessage: string): Promise<AxiosResponse | void> => {
+  async (codename: string, itemId: string, errorMessage: string): Promise<void> => {
     const errorText = `Publishing of content item **${codename}** has failed.`;
     const errorTextEscaped = errorText.replace(/_/g, '\\\_');
 
-    return await axios.post(
-      NotificationUrl,
-      {
+    for (const url of NotificationUrls) {
+      await axios.post(url, {
         '@@context': 'https://schema.org/extensions',
         '@@type': 'MessageCard',
         'sections': [
@@ -37,6 +36,7 @@ export const sendNotification =
         'summary': 'One Help Portal - publishing failed',
         'themeColor': 'C93636',
       });
+    }
   };
 
 export const getWorkflowStepOfItem = async (codename: string): Promise<string> => {

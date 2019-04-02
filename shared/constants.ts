@@ -6,7 +6,9 @@ export const FiveMinutes = 300000;
 export const ProjectId = process.env['KC.ProjectId'] || '';
 export const PreviewApiKey = process.env['KC.PreviewApiKey'] || '';
 export const ContentManagementApiKey = process.env['KC.ContentManagementApiKey'] || '';
-export const NotificationUrl = process.env['Teams.NotificationUrl'] || '';
+
+const NotificationUrlsString = process.env['Teams.NotificationUrls'] || '';
+export const NotificationUrls = NotificationUrlsString.split(';');
 
 export const WorkflowCascadePublishId = process.env['KC.Step.CascadePublishId'];
 export const WorkflowScheduledId = process.env['KC.Step.ScheduledPublishId'];

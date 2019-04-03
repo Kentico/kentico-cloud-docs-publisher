@@ -27,7 +27,7 @@ export const sendNotification =
         'sections': [
           {
             activityImage: 'https://img.icons8.com/color/100/000000/close-window.png',
-            activityTitle: 'Publishing of one or more items has failed.',
+            activityTitle: 'Cascade publish failed.',
             text: `${errorTextEscaped}  ${errorMessage}: ` +
               `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
               `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`,
@@ -73,6 +73,8 @@ export const publishDefaultLanguageVariant = async (item: ContentItem | undefine
       item.system.id,
       error.message,
     );
+
+    throw error;
   }
 };
 

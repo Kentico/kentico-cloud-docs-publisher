@@ -6,7 +6,7 @@
 
 Backend function for Kentico Cloud documentation portal, which utilizes [Kentico Cloud](https://app.kenticocloud.com/) as a source of its content.
 
-The function periodically checks content item variants in Kentico Cloud that are in a specific worflow step. These content item variants are then automatically published using [Content Management API](https://developer.kenticocloud.com/v1/reference#content-management-api-v2).
+The function periodically checks content item variants in Kentico Cloud that are in a `Cascade publish` or `Scheduled publish` worflow step. These content item variants and their inner items are then automatically published using [Content Management API](https://developer.kenticocloud.com/v1/reference#content-management-api-v2).
 
 ## Overview
 1. This project is a TypeScript Azure Functions application.
@@ -28,8 +28,15 @@ The function periodically checks content item variants in Kentico Cloud that are
 6. Deploy to Azure using Azure Functions extension tab, or run locally by pressing `Ctrl + F5` in Visual Studio Code.
 
 #### Required Keys
-* `KenticoCloud.ProjectId` - Kentico Cloud project ID
-* `KenticoCloud.ContentManagementApiKey` - Kentico Cloud Content Management API key
+* `KC.ProjectId` - Kentico Cloud project ID
+* `KC.ContentManagementApiKey` - Kentico Cloud Content Management API key
+* `KC.PreviewApiKey` - Kentico Cloud Delivery Preview API key
+* `KC.InternalApiToken` - Kentico Cloud Authorization token
+* `KC.Step.ArchivedId` - Id of Archived workflow step
+* `KC.Step.CascadePublishId` - Id of Cascade publish workflow step
+* `KC.Step.PublishId` - Id of Publish workflow step
+* `KC.Step.ScheduledPublishId` - Id of Scheduled Publish workflow step
+* `Teams.NotificationUrls` - Url for Teams notifications
 
 ## Testing
 * Run `yarn run test` in the terminal.

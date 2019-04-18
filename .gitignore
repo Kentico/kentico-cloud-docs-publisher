@@ -17,6 +17,9 @@ yarn-error.log*
 /packages
 /TestResults
 
+dist/
+
+!.idea/codeStyles/*
 .idea/*
 .env
 

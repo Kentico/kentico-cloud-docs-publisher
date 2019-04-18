@@ -1,8 +1,12 @@
+| [master](https://github.com/Kentico/kentico-cloud-docs-search/tree/master) | [develop](https://github.com/Kentico/kentico-cloud-docs-search/tree/develop) |
+|:---:|:---:|
+| [![Build Status](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher.svg?branch=master)](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/9f0fc490-0009-46ec-9e38-ad4a83442713)](https://codebeat.co/projects/github-com-kentico-kentico-cloud-docs-publisher-master) | [![Build Status](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher.svg?branch=develop)](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/c265105a-2af3-4b3d-b983-c6442b745652)](https://codebeat.co/projects/github-com-kentico-kentico-cloud-docs-publisher-develop) |
+
 # Kentico Cloud Documentation - Publisher
 
 Backend function for Kentico Cloud documentation portal, which utilizes [Kentico Cloud](https://app.kenticocloud.com/) as a source of its content.
 
-The function periodically checks content item variants in Kentico Cloud that are in a specific worflow step. These content item variants are then automatically published using [Content Management API](https://developer.kenticocloud.com/v1/reference#content-management-api-v2).
+The function periodically checks content item variants in Kentico Cloud that are in a `Cascade publish` or `Scheduled publish` worflow step. These content item variants and their inner items are then automatically published using [Content Management API](https://developer.kenticocloud.com/v1/reference#content-management-api-v2).
 
 ## Overview
 1. This project is a TypeScript Azure Functions application.
@@ -24,8 +28,15 @@ The function periodically checks content item variants in Kentico Cloud that are
 6. Deploy to Azure using Azure Functions extension tab, or run locally by pressing `Ctrl + F5` in Visual Studio Code.
 
 #### Required Keys
-* `KenticoCloud.ProjectId` - Kentico Cloud project ID
-* `KenticoCloud.ContentManagementApiKey` - Kentico Cloud Content Management API key
+* `KC.ProjectId` - Kentico Cloud project ID
+* `KC.ContentManagementApiKey` - Kentico Cloud Content Management API key
+* `KC.PreviewApiKey` - Kentico Cloud Delivery Preview API key
+* `KC.InternalApiToken` - Kentico Cloud Authorization token
+* `KC.Step.ArchivedId` - Id of Archived workflow step
+* `KC.Step.CascadePublishId` - Id of Cascade publish workflow step
+* `KC.Step.PublishId` - Id of Publish workflow step
+* `KC.Step.ScheduledPublishId` - Id of Scheduled Publish workflow step
+* `Teams.NotificationUrls` - Url for Teams notifications
 
 ## Testing
 * Run `yarn run test` in the terminal.

@@ -6,7 +6,12 @@ import {
 import { cascadePublish } from '../shared/cascadePublish';
 
 const httpTrigger: AzureFunction = async (context: Context, req: HttpRequest): Promise<void> => {
-  await cascadePublish();
+  try {
+    await cascadePublish();
+  } catch (error) {
+    /** This try-catch is required for correct logging of exceptions in Azure */
+    throw error;
+  }
 };
 
 export default httpTrigger;

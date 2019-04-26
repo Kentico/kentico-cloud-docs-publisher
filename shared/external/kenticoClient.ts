@@ -28,4 +28,6 @@ export const deliveryClient = new DeliveryClient({
 export const contentManagementClient = new ContentManagementClient({
   apiKey: ContentManagementApiKey,
   projectId: ProjectId,
+  retryAttempts: 9,
+  retryStatusCodes: [429, 500],
 });

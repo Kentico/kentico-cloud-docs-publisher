@@ -28,6 +28,8 @@ export const deliveryClient = new DeliveryClient({
 export const contentManagementClient = new ContentManagementClient({
   apiKey: ContentManagementApiKey,
   projectId: ProjectId,
+  /* Ensures we don't hit the requests per minute API limit. */
   retryAttempts: 9,
+  /* To ensure we retry correct refused requests. */
   retryStatusCodes: [429, 500],
 });

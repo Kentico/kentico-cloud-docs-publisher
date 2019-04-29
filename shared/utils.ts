@@ -9,6 +9,7 @@ import {
   ProjectId,
   WorkflowArchivedId,
   WorkflowPublishedId,
+  WorkflowScheduledId,
 } from './constants';
 import { contentManagementClient } from './external/kenticoClient';
 
@@ -50,6 +51,24 @@ export const getWorkflowStepOfItem = async (codename: string): Promise<string> =
   return response.data.workflowStep.id || EmptyGuid;
 };
 
+export const getScheduledPublishTime = async (itemId: string): Promise<string> => {
+  const response = await axios({
+    headers: InternalDraftApiHeader,
+    method: 'get',
+    url: `${InternalApiBaseAddress}/item/${itemId}/variant/${EmptyGuid}`,
+  });
+
+  return response.data.variant.assignment.publishScheduleTime;
+};
+
+export const isDue = async (itemId: string): Promise<boolean> => {
+  const timeToPublish = await getScheduledPublishTime(itemId);
+  const scheduledTime = new Date(timeToPublish).getTime();
+  const currentTime = Date.now();
+
+  return scheduledTime - currentTime < FiveMinutes;
+};
+
 export const publishDefaultLanguageVariant = async (item: ContentItem | undefined): Promise<AxiosResponse | void> => {
   if (item === undefined) {
     return;
@@ -59,8 +78,10 @@ export const publishDefaultLanguageVariant = async (item: ContentItem | undefine
     const itemWorkflowStep = await getWorkflowStepOfItem(item.system.codename);
     const isPublished = itemWorkflowStep === WorkflowPublishedId;
     const isArchived = itemWorkflowStep === WorkflowArchivedId;
+    const isScheduled = itemWorkflowStep === WorkflowScheduledId;
+    const isDueToBePublished = !isScheduled || (isScheduled && await isDue(item.system.id));
 
-    if (!isPublished && !isArchived) {
+    if (!isPublished && !isArchived && isDueToBePublished) {
       await contentManagementClient
         .publishOrScheduleLanguageVariant()
         .byItemId(item.system.id)
@@ -102,22 +123,4 @@ const parseRichtextContent = (content: string): string[] => {
       objectElement.rawAttributes['data-type'] === 'item' &&
       objectElement.rawAttributes['data-rel'] === 'link')
     .map((objectElement: any) => objectElement.rawAttributes['data-codename']);
-};
-
-export const getScheduledPublishTime = async (itemId: string): Promise<string> => {
-  const response = await axios({
-    headers: InternalDraftApiHeader,
-    method: 'get',
-    url: `${InternalApiBaseAddress}/item/${itemId}/variant/${EmptyGuid}`,
-  });
-
-  return response.data.variant.assignment.publishScheduleTime;
-};
-
-export const isDue = async (itemId: string): Promise<boolean> => {
-  const timeToPublish = await getScheduledPublishTime(itemId);
-  const scheduledTime = new Date(timeToPublish).getTime();
-  const currentTime = Date.now();
-
-  return scheduledTime - currentTime < FiveMinutes;
 };

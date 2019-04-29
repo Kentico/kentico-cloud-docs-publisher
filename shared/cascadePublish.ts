@@ -9,7 +9,6 @@ import {
 } from './constants';
 import { deliveryClient } from './external/kenticoClient';
 import { CodeSamples } from './models/code_samples';
-import { MultiplatformArticle } from './models/multiplatform_article';
 import {
   getLinkedItemsCodenames,
   getWorkflowStepOfItem,
@@ -46,8 +45,8 @@ const processItem = async (item: ContentItem, linkedItems: ContentItem[]): Promi
 };
 
 const publishItemInCascadePublishStep = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
-  if (item instanceof MultiplatformArticle) {
-    await publishDefaultLanguageVariant(item);
+  if (item instanceof CodeSamples) {
+    await publishCodeSamples(item, linkedItems);
   } else {
     await cascadePublishItem(item, linkedItems);
   }

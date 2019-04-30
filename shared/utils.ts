@@ -2,11 +2,11 @@ import axios, { AxiosResponse } from 'axios';
 import { ContentItem } from 'kentico-cloud-delivery';
 import {
   EmptyGuid,
-  FiveMinutes,
   InternalApiBaseAddress,
   InternalDraftApiHeader,
   NotificationUrls,
   ProjectId,
+  TenMinutes,
   WorkflowArchivedId,
   WorkflowPublishedId,
   WorkflowScheduledId,
@@ -66,7 +66,17 @@ export const isDue = async (itemId: string): Promise<boolean> => {
   const scheduledTime = new Date(timeToPublish).getTime();
   const currentTime = Date.now();
 
-  return scheduledTime - currentTime < FiveMinutes;
+  return scheduledTime - currentTime < TenMinutes;
+};
+
+const shouldItemBePublished = async (item: ContentItem) => {
+  const itemWorkflowStep = await getWorkflowStepOfItem(item.system.codename);
+  const isPublished = itemWorkflowStep === WorkflowPublishedId;
+  const isArchived = itemWorkflowStep === WorkflowArchivedId;
+  const isScheduled = itemWorkflowStep === WorkflowScheduledId;
+  const isDueToBePublished = !isScheduled || (isScheduled && await isDue(item.system.id));
+
+  return !isPublished && !isArchived && isDueToBePublished;
 };
 
 export const publishDefaultLanguageVariant = async (item: ContentItem | undefined): Promise<AxiosResponse | void> => {
@@ -75,13 +85,7 @@ export const publishDefaultLanguageVariant = async (item: ContentItem | undefine
   }
 
   try {
-    const itemWorkflowStep = await getWorkflowStepOfItem(item.system.codename);
-    const isPublished = itemWorkflowStep === WorkflowPublishedId;
-    const isArchived = itemWorkflowStep === WorkflowArchivedId;
-    const isScheduled = itemWorkflowStep === WorkflowScheduledId;
-    const isDueToBePublished = !isScheduled || (isScheduled && await isDue(item.system.id));
-
-    if (!isPublished && !isArchived && isDueToBePublished) {
+    if (await shouldItemBePublished(item)) {
       await contentManagementClient
         .publishOrScheduleLanguageVariant()
         .byItemId(item.system.id)

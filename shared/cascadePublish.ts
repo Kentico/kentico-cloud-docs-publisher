@@ -10,7 +10,7 @@ import {
 import { deliveryClient } from './external/kenticoClient';
 import { CodeSamples } from './models/code_samples';
 import {
-  getLinkedItemsCodenames,
+  getRichtextChildrenCodenames,
   getWorkflowStepOfItem,
   isDue,
   publishDefaultLanguageVariant,
@@ -19,16 +19,16 @@ import {
 export const cascadePublish = async (): Promise<void> =>
   await deliveryClient
     .items()
-    .depthParameter(0)
+    .depthParameter(1)
     .getPromise()
     .then(async (response: DeliveryItemListingResponse<ContentItem>) => {
       await processItems(response);
     });
 
 const processItems =
-  async ({ items }: DeliveryItemListingResponse<ContentItem>): Promise<void> => {
+  async ({ items, linkedItems }: DeliveryItemListingResponse<ContentItem>): Promise<void> => {
     for (const item of items) {
-      await processItem(item, items);
+      await processItem(item, linkedItems);
     }
   };
 
@@ -52,16 +52,26 @@ const publishItemInCascadePublishStep = async (item: ContentItem, linkedItems: C
   }
 };
 
-const cascadePublishItem = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
+const cascadePublishItem = async (
+  item: ContentItem,
+  linkedItems: ContentItem[],
+  isComponent?: boolean,
+): Promise<void> => {
   await publishLinkedItemsOfItem(item, linkedItems);
-  await publishDefaultLanguageVariant(item);
+
+  if (!isComponent) {
+    await publishDefaultLanguageVariant(item);
+  }
 };
 
 const publishLinkedItemsOfItem = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
-  const linkedItemsCodenames = getLinkedItemsCodenames(item);
+  const { componentCodenames, linkedItemCodenames } = getRichtextChildrenCodenames(item);
   const itemsLinkedItems =
     linkedItems
-      .filter((linkedItem: ContentItem) => linkedItemsCodenames.includes(linkedItem.system.codename));
+      .filter((linkedItem: ContentItem) => linkedItemCodenames.includes(linkedItem.system.codename));
+  const componentItems =
+    linkedItems
+      .filter((linkedItem: ContentItem) => componentCodenames.includes(linkedItem.system.codename));
 
   for (const linkedItem of itemsLinkedItems) {
     if (linkedItem instanceof CodeSamples) {
@@ -69,6 +79,10 @@ const publishLinkedItemsOfItem = async (item: ContentItem, linkedItems: ContentI
     } else {
       await cascadePublishItem(linkedItem, linkedItems);
     }
+  }
+
+  for (const componentItem of componentItems) {
+    await cascadePublishItem(componentItem, linkedItems, true);
   }
 };
 

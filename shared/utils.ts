@@ -16,6 +16,11 @@ import { contentManagementClient } from './external/kenticoClient';
 require('dotenv').config();
 const parser = require('node-html-parser');
 
+export interface IInnerItemCodenames {
+  readonly componentCodenames: string[];
+  readonly linkedItemCodenames: string[];
+}
+
 export const sendNotification =
   async (codename: string, itemId: string, errorMessage: string): Promise<void> => {
     const errorText = `Publishing of content item **${codename}** has failed.`;
@@ -103,7 +108,7 @@ export const publishDefaultLanguageVariant = async (item: ContentItem | undefine
   }
 };
 
-export const getLinkedItemsCodenames = (item: ContentItem): string[] => {
+export const getRichtextChildrenCodenames = (item: ContentItem): IInnerItemCodenames => {
   let contentOfRichtextElements = '';
 
   for (const elementCodename of Object.keys(item.elements)) {
@@ -117,14 +122,23 @@ export const getLinkedItemsCodenames = (item: ContentItem): string[] => {
   return parseRichtextContent(contentOfRichtextElements);
 };
 
-const parseRichtextContent = (content: string): string[] => {
+const parseRichtextContent = (content: string): IInnerItemCodenames => {
   const root = parser.parse(content);
   const objectElements = root.querySelectorAll('object');
 
-  return objectElements
+  const linkedItemCodenames = getInnerItemCodenames(objectElements, 'link');
+  const componentCodenames = getInnerItemCodenames(objectElements, 'component');
+
+  return {
+    componentCodenames,
+    linkedItemCodenames,
+  };
+};
+
+const getInnerItemCodenames = (elements: HTMLElement[], type: string): string[] =>
+  elements
     .filter((objectElement: any) =>
       objectElement.rawAttributes.type === 'application/kenticocloud' &&
       objectElement.rawAttributes['data-type'] === 'item' &&
-      objectElement.rawAttributes['data-rel'] === 'link')
+      objectElement.rawAttributes['data-rel'] === type)
     .map((objectElement: any) => objectElement.rawAttributes['data-codename']);
-};

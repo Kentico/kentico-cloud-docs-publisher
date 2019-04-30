@@ -1,8 +1,11 @@
 import { ContentItem } from 'kentico-cloud-delivery';
-import { getLinkedItemsCodenames } from './utils';
+import {
+  getRichtextChildrenCodenames,
+  IInnerItemCodenames,
+} from './utils';
 
-describe('getLinkedItemsCodenames', () => {
-  it('should return codenames of linked items and ignore components in richtext', () => {
+describe('getRichtextChildrenCodenames', () => {
+  it('should return codenames of linked items and components in richtext', () => {
     const item: ContentItem = {
       elements: {
         rt: {
@@ -39,17 +42,22 @@ describe('getLinkedItemsCodenames', () => {
         type: 'automat',
       },
     };
-    const expectedCodenames = [
-      'first_known_item',
-      'second_known_item',
-    ];
+    const expectedCodenames = {
+      componentCodenames: [
+        'n270aa43a_0910_0193_cac2_00a2dc564224',
+      ],
+      linkedItemCodenames: [
+        'first_known_item',
+        'second_known_item',
+      ],
+    };
 
-    const result = getLinkedItemsCodenames(item);
+    const result = getRichtextChildrenCodenames(item);
 
-    expect(result.sort()).toEqual(expectedCodenames.sort());
+    assertCodenames(result, expectedCodenames);
   });
 
-  it('should return codenames of linked items and ignore unknown type in richtext', () => {
+  it('should return codenames of linked items and components and ignore unknown type in richtext', () => {
     const item: ContentItem = {
       elements: {
         rt: {
@@ -71,6 +79,12 @@ describe('getLinkedItemsCodenames', () => {
             '<object ' +
             'type="application/kenticocloud" ' +
             'data-type="item" ' +
+            'data-rel="component" ' +
+            'data-codename="n270aa43a_0910_0193_cac2_00a2dc564224">' +
+            '</object>\n' +
+            '<object ' +
+            'type="application/kenticocloud" ' +
+            'data-type="item" ' +
             'data-rel="link" ' +
             'data-codename="second_known_item">' +
             '</object>',
@@ -86,17 +100,22 @@ describe('getLinkedItemsCodenames', () => {
         type: 'automat',
       },
     };
-    const expectedCodenames = [
-      'first_known_item',
-      'second_known_item',
-    ];
+    const expectedCodenames = {
+      componentCodenames: [
+        'n270aa43a_0910_0193_cac2_00a2dc564224',
+      ],
+      linkedItemCodenames: [
+        'first_known_item',
+        'second_known_item',
+      ],
+    };
 
-    const result = getLinkedItemsCodenames(item);
+    const result = getRichtextChildrenCodenames(item);
 
-    expect(result.sort()).toEqual(expectedCodenames.sort());
+    assertCodenames(result, expectedCodenames);
   });
 
-  it('should return codenames of linked items and ignore unknown data type in richtext', () => {
+  it('should return codenames of linked items and components and ignore unknown data type in richtext', () => {
     const item: ContentItem = {
       elements: {
         rt: {
@@ -120,6 +139,18 @@ describe('getLinkedItemsCodenames', () => {
             'data-type="item" ' +
             'data-rel="link" ' +
             'data-codename="second_known_item">' +
+            '</object>' +
+            '<object ' +
+            'type="application/kenticocloud" ' +
+            'data-type="item" ' +
+            'data-rel="component" ' +
+            'data-codename="third_known_item">' +
+            '</object>' +
+            '<object ' +
+            'type="application/kenticocloud" ' +
+            'data-type="new_type" ' +
+            'data-rel="component" ' +
+            'data-codename="another_new_item">' +
             '</object>',
         },
       },
@@ -133,17 +164,22 @@ describe('getLinkedItemsCodenames', () => {
         type: 'automat',
       },
     };
-    const expectedCodenames = [
-      'first_known_item',
-      'second_known_item',
-    ];
+    const expectedCodenames = {
+      componentCodenames: [
+        'third_known_item',
+      ],
+      linkedItemCodenames: [
+        'first_known_item',
+        'second_known_item',
+      ],
+    };
 
-    const result = getLinkedItemsCodenames(item);
+    const result = getRichtextChildrenCodenames(item);
 
-    expect(result.sort()).toEqual(expectedCodenames.sort());
+    assertCodenames(result, expectedCodenames);
   });
 
-  it('should return codenames of linked items in richtexts', () => {
+  it('should return codenames of linked items and components in richtexts', () => {
     const item: ContentItem = {
       elements: {
         first_rt: {
@@ -166,6 +202,16 @@ describe('getLinkedItemsCodenames', () => {
             'data-codename="item_in_second_rich_text">' +
             '</object>\n',
         },
+        third_rt: {
+          name: 'Third RT',
+          type: 'rich_text',
+          value: '<object ' +
+            'type="application/kenticocloud" ' +
+            'data-type="item" ' +
+            'data-rel="component" ' +
+            'data-codename="item_in_third_rich_text">' +
+            '</object>\n',
+        },
       },
       system: {
         codename: 'automatically_published',
@@ -177,13 +223,23 @@ describe('getLinkedItemsCodenames', () => {
         type: 'automat',
       },
     };
-    const expectedCodenames = [
-      'item_in_first_rich_text',
-      'item_in_second_rich_text',
-    ];
+    const expectedCodenames = {
+      componentCodenames: [
+        'item_in_third_rich_text',
+      ],
+      linkedItemCodenames: [
+        'item_in_first_rich_text',
+        'item_in_second_rich_text',
+      ],
+    };
 
-    const result = getLinkedItemsCodenames(item);
+    const result = getRichtextChildrenCodenames(item);
 
-    expect(result.sort()).toEqual(expectedCodenames.sort());
+    assertCodenames(result, expectedCodenames);
   });
 });
+
+const assertCodenames = (actualCodenames: IInnerItemCodenames, expectedCodenames: IInnerItemCodenames) => {
+  expect(actualCodenames.linkedItemCodenames.sort()).toEqual(expectedCodenames.linkedItemCodenames.sort());
+  expect(actualCodenames.componentCodenames.sort()).toEqual(expectedCodenames.componentCodenames.sort());
+};

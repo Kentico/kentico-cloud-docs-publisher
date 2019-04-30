@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 export const EmptyGuid = '00000000-0000-0000-0000-000000000000';
-export const FiveMinutes = 300000;
+export const TenMinutes = 600000;
 
 export const ProjectId = process.env['KC.ProjectId'] || '';
 export const PreviewApiKey = process.env['KC.PreviewApiKey'] || '';

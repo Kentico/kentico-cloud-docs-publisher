@@ -13,6 +13,7 @@
 	"jsRules": {},
 	"rules": {
 		"no-var-requires": false,
+		"no-string-throw": false,
 		"quotemark": [
 			true,
 			"single"

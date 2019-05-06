@@ -29,5 +29,5 @@ export const contentManagementClient = new ContentManagementClient({
   /* Ensures we don't hit the requests per minute API limit. */
   retryAttempts: 9,
   /* To ensure we retry correct refused requests. */
-  retryStatusCodes: [429, 500],
+  retryStatusCodes: [408, 429, 500, 502, 503, 504],
 });

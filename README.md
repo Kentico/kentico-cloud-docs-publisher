@@ -1,6 +1,6 @@
 | [master](https://github.com/Kentico/kentico-cloud-docs-search/tree/master) | [develop](https://github.com/Kentico/kentico-cloud-docs-search/tree/develop) |
 |:---:|:---:|
-| [![Build Status](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher.svg?branch=master)](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/e85f4b57-3d55-43bf-82a7-da157852cc48)](https://codebeat.co/projects/github-com-kentico-kentico-cloud-docs-publisher-master-b9b37466-a187-4fff-9704-ed88f1cf84a4) | [![Build Status](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher.svg?branch=develop)](https://travis-ci.com/Kentico/kentico-cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/c265105a-2af3-4b3d-b983-c6442b745652)](https://codebeat.co/projects/github-com-kentico-kentico-cloud-docs-publisher-develop) |
+| [![Build Status](https://travis-ci.com/KenticoDocs/cloud-docs-publisher.svg?branch=master)](https://travis-ci.com/KenticoDocs/cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/ad12c4ef-caec-4f17-900e-9641efa33ccb)](https://codebeat.co/projects/github-com-kenticodocs-cloud-docs-publisher-master) | [![Build Status](https://travis-ci.com/KenticoDocs/cloud-docs-dispatcher.svg?branch=develop)](https://travis-ci.com/KenticoDocs/cloud-docs-dispatcher) [![codebeat badge](https://codebeat.co/badges/ed1f8296-9732-4085-ae84-7a36b405b3cd)](https://codebeat.co/projects/github-com-kenticodocs-cloud-docs-publisher-develop) |
 
 # Kentico Cloud Documentation - Publisher
 

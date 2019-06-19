@@ -4,7 +4,7 @@ import {
   EmptyGuid,
   InternalApiBaseAddress,
   InternalDraftApiHeader,
-  NotificationUrls,
+  NotifierEndpoint,
   ProjectId,
   TenMinutes,
   WorkflowArchivedId,
@@ -13,7 +13,6 @@ import {
 } from './constants';
 import { contentManagementClient } from './external/kenticoClient';
 
-require('dotenv').config();
 const parser = require('node-html-parser');
 
 export interface IInnerItemCodenames {
@@ -26,23 +25,15 @@ export const sendNotification =
     const errorText = `Publishing of content item **${codename}** has failed.`;
     const errorTextEscaped = errorText.replace(/_/g, '\\\_');
 
-    for (const url of NotificationUrls) {
-      await axios.post(url, {
-        '@@context': 'https://schema.org/extensions',
-        '@@type': 'MessageCard',
-        'sections': [
-          {
-            activityImage: 'https://img.icons8.com/color/100/000000/close-window.png',
-            activityTitle: 'Cascade publish failed.',
-            text: `${errorTextEscaped}  ${errorMessage}: ` +
-              `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
-              `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`,
-          },
-        ],
-        'summary': 'One Help Portal - publishing failed',
-        'themeColor': 'C93636',
-      });
-    }
+    const body = {
+      activityTitle: 'Cascade publish failed.',
+      mode: 'error',
+      text: `${errorTextEscaped}  ${errorMessage}: ` +
+          `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
+          `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`,
+    };
+
+    await axios.post(NotifierEndpoint, body);
   };
 
 export const getWorkflowStepOfItem = async (codename: string): Promise<string> => {

@@ -10,8 +10,6 @@ import {
 } from '../constants';
 import { CodeSamples } from '../models/code_samples';
 
-require('dotenv').config();
-
 const typeResolvers = [
   new TypeResolver('code_samples', () => new CodeSamples()),
 ];

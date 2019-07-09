@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 export const EmptyGuid = '00000000-0000-0000-0000-000000000000';
 export const TenMinutes = 600000;
 
@@ -7,8 +5,8 @@ export const ProjectId = process.env['KC.ProjectId'] || '';
 export const PreviewApiKey = process.env['KC.PreviewApiKey'] || '';
 export const ContentManagementApiKey = process.env['KC.ContentManagementApiKey'] || '';
 
-const NotificationUrlsString = process.env['Teams.NotificationUrls'] || '';
-export const NotificationUrls = NotificationUrlsString.split(';');
+export const NotifierEndpoint = process.env['EventGrid.Notification.Endpoint'] || '';
+export const EventGridKey = process.env['EventGrid.Notification.Key'] || '';
 
 export const WorkflowCascadePublishId = process.env['KC.Step.CascadePublishId'];
 export const WorkflowScheduledId = process.env['KC.Step.ScheduledPublishId'];

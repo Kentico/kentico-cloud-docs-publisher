@@ -36,7 +36,8 @@ The function periodically checks content item variants in Kentico Cloud that are
 * `KC.Step.CascadePublishId` - Id of Cascade publish workflow step
 * `KC.Step.PublishId` - Id of Publish workflow step
 * `KC.Step.ScheduledPublishId` - Id of Scheduled Publish workflow step
-* `Teams.NotificationUrls` - Url for Teams notifications
+* `EventGrid.Notification.Key` - Key for notification eventGrid topic
+* `EventGrid.Notification.Endpoint` - Url for notification eventGrid topic
 
 ## Testing
 * Run `yarn run test` in the terminal.

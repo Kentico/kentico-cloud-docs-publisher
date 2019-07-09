@@ -1,19 +1,25 @@
 import axios, { AxiosResponse } from 'axios';
+import { EventGridClient } from 'azure-eventgrid';
 import { ContentItem } from 'kentico-cloud-delivery';
+import { TopicCredentials } from 'ms-rest-azure';
 import {
   EmptyGuid,
+  EventGridKey,
   InternalApiBaseAddress,
   InternalDraftApiHeader,
-  NotificationUrls,
+  NotifierEndpoint,
   ProjectId,
   TenMinutes,
   WorkflowArchivedId,
   WorkflowPublishedId,
   WorkflowScheduledId,
 } from './constants';
+import {
+  eventComposer,
+  publishEventsCreator,
+} from './external/eventGridClient';
 import { contentManagementClient } from './external/kenticoClient';
 
-require('dotenv').config();
 const parser = require('node-html-parser');
 
 export interface IInnerItemCodenames {
@@ -26,23 +32,20 @@ export const sendNotification =
     const errorText = `Publishing of content item **${codename}** has failed.`;
     const errorTextEscaped = errorText.replace(/_/g, '\\\_');
 
-    for (const url of NotificationUrls) {
-      await axios.post(url, {
-        '@@context': 'https://schema.org/extensions',
-        '@@type': 'MessageCard',
-        'sections': [
-          {
-            activityImage: 'https://img.icons8.com/color/100/000000/close-window.png',
-            activityTitle: 'Cascade publish failed.',
-            text: `${errorTextEscaped}  ${errorMessage}: ` +
-              `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
-              `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`,
-          },
-        ],
-        'summary': 'One Help Portal - publishing failed',
-        'themeColor': 'C93636',
-      });
+    const text = `${errorTextEscaped}  ${errorMessage}: ` +
+          `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
+          `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`;
+
+    if (!EventGridKey || !NotifierEndpoint) {
+      throw new Error('Undefined env property provided');
     }
+
+    const topicCredentials = new TopicCredentials(EventGridKey);
+    const eventGridClient = new EventGridClient(topicCredentials);
+    const publishEvents = publishEventsCreator({ eventGridClient, host: NotifierEndpoint });
+
+    const event = eventComposer('Cascade publish failed.', text);
+    await publishEvents([event]);
   };
 
 export const getWorkflowStepOfItem = async (codename: string): Promise<string> => {

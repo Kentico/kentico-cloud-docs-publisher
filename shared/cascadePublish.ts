@@ -1,97 +1,86 @@
 import DeliveryItemListingResponse = ItemResponses.DeliveryItemListingResponse;
 import {
-  ContentItem,
-  ItemResponses,
+    ContentItem,
+    ItemResponses,
 } from 'kentico-cloud-delivery';
-import {
-  WorkflowCascadePublishId,
-  WorkflowScheduledId,
-} from './constants';
+import { IItem } from '../EventGridTrigger';
+import { WorkflowCascadePublishId } from './constants';
 import { deliveryClient } from './external/kenticoClient';
 import { CodeSamples } from './models/code_samples';
 import {
-  getRichtextChildrenCodenames,
-  getWorkflowStepOfItem,
-  isDue,
-  publishDefaultLanguageVariant,
+    getRichtextChildrenCodenames,
+    publishDefaultLanguageVariant,
+    scheduleDefaultLanguageVariant,
 } from './utils';
 
-export const cascadePublish = async (): Promise<void> =>
-  await deliveryClient
-    .items()
-    .depthParameter(1)
-    .getPromise()
-    .then(async (response: DeliveryItemListingResponse<ContentItem>) => {
-      await processItems(response);
-    });
+export class ItemWorkflowManager {
+    private rootItem: ContentItem;
+    private linkedItems: ContentItem[];
+    private workflowStepId: string;
 
-const processItems =
-  async ({ items, linkedItems }: DeliveryItemListingResponse<ContentItem>): Promise<void> => {
-    for (const item of items) {
-      await processItem(item, linkedItems);
-    }
-  };
+    public cascadeProcessItem = async ({ item, transition_to }: IItem): Promise<void> =>
+      await deliveryClient
+        .items()
+        .depthParameter(15)
+        .equalsFilter('system.id', item.id)
+        .getPromise()
+        .then(async ({ items, linkedItems }: DeliveryItemListingResponse<ContentItem>) => {
+            this.rootItem = items[0];
+            this.linkedItems = linkedItems;
+            this.workflowStepId = transition_to.id;
 
-const processItem = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
-  const workflowStep = await getWorkflowStepOfItem(item.system.codename);
+            await this.cascadePublishOrScheduleItem();
+        });
 
-  if (workflowStep === WorkflowCascadePublishId) {
-    await publishItemInCascadePublishStep(item, linkedItems);
-  }
+    private cascadePublishOrScheduleItem = async (): Promise<void> => {
+        this.rootItem instanceof CodeSamples
+          ? await this.processCodeSamplesItem()
+          : await this.processContentItem();
+    };
 
-  if (workflowStep === WorkflowScheduledId && await isDue(item.system.id)) {
-    await publishItemInCascadePublishStep(item, linkedItems);
-  }
-};
+    private processContentItem = async (item: ContentItem = this.rootItem): Promise<void> => {
+        await this.processLinkedItems(item);
+        await this.publishOrScheduleSingleItem(item);
+    };
 
-const publishItemInCascadePublishStep = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
-  if (item instanceof CodeSamples) {
-    await publishCodeSamples(item, linkedItems);
-  } else {
-    await cascadePublishItem(item, linkedItems);
-  }
-};
+    private processLinkedItems = async (item: ContentItem): Promise<void> => {
+        const { componentCodenames, linkedItemCodenames } = getRichtextChildrenCodenames(item);
+        const itemsLinkedItems =
+          this.linkedItems
+            .filter((linkedItem: ContentItem) => linkedItemCodenames.includes(linkedItem.system.codename));
+        const componentItems =
+          this.linkedItems
+            .filter((linkedItem: ContentItem) => componentCodenames.includes(linkedItem.system.codename));
 
-const cascadePublishItem = async (
-  item: ContentItem,
-  linkedItems: ContentItem[],
-  isComponent?: boolean,
-): Promise<void> => {
-  await publishLinkedItemsOfItem(item, linkedItems);
+        for (const linkedItem of itemsLinkedItems) {
+            if (linkedItem instanceof CodeSamples) {
+                await this.processCodeSamplesItem(linkedItem);
+            } else {
+                await this.processContentItem(linkedItem);
+            }
+        }
 
-  if (!isComponent) {
-    await publishDefaultLanguageVariant(item);
-  }
-};
+        for (const componentItem of componentItems) {
+            await this.processLinkedItems(componentItem);
+        }
+    };
 
-const publishLinkedItemsOfItem = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
-  const { componentCodenames, linkedItemCodenames } = getRichtextChildrenCodenames(item);
-  const itemsLinkedItems =
-    linkedItems
-      .filter((linkedItem: ContentItem) => linkedItemCodenames.includes(linkedItem.system.codename));
-  const componentItems =
-    linkedItems
-      .filter((linkedItem: ContentItem) => componentCodenames.includes(linkedItem.system.codename));
+    private processCodeSamplesItem = async (item: ContentItem = this.rootItem): Promise<void> => {
+        await this.publishOrScheduleSingleItem(item);
 
-  for (const linkedItem of itemsLinkedItems) {
-    if (linkedItem instanceof CodeSamples) {
-      await publishCodeSamples(linkedItem, linkedItems);
-    } else {
-      await cascadePublishItem(linkedItem, linkedItems);
-    }
-  }
+        for (const codeSampleCodename of item.elements.code_samples.value) {
+            const codeSample = this.linkedItems.find(
+              (linkedItem: ContentItem) => linkedItem.system.codename === codeSampleCodename);
 
-  for (const componentItem of componentItems) {
-    await cascadePublishItem(componentItem, linkedItems, true);
-  }
-};
+            if (codeSample !== undefined) {
+                await this.publishOrScheduleSingleItem(codeSample);
+            }
+        }
+    };
 
-const publishCodeSamples = async (codeSamples: CodeSamples, linkedItems: ContentItem[]): Promise<void> => {
-  await publishDefaultLanguageVariant(codeSamples);
-
-  for (const codeSampleCodename of codeSamples.elements.code_samples.value) {
-    const codeSample = linkedItems.find(
-      (linkedItem: ContentItem) => linkedItem.system.codename === codeSampleCodename);
-    await publishDefaultLanguageVariant(codeSample);
-  }
-};
+    private publishOrScheduleSingleItem = async (item: ContentItem): Promise<void> => {
+        this.workflowStepId === WorkflowCascadePublishId
+          ? await publishDefaultLanguageVariant(item)
+          : await scheduleDefaultLanguageVariant(this.rootItem, item);
+    };
+}

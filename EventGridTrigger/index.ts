@@ -3,7 +3,7 @@ import {
     Context,
 } from '@azure/functions';
 import { IEventGridEvent } from 'cloud-docs-shared-code';
-import { ItemWorkflowManager } from '../shared/cascadePublish';
+import { ItemWorkflowManager } from '../shared/ItemWorkflowManager';
 
 interface IIdentifier {
     readonly id: string;

@@ -6,15 +6,17 @@
 
 Backend function for Kentico Cloud documentation portal, which utilizes [Kentico Cloud](https://app.kenticocloud.com/) as a source of its content.
 
-The function periodically checks content item variants in Kentico Cloud that are in a `Cascade publish` or `Scheduled publish` worflow step. These content item variants and their inner items are then automatically published using [Content Management API](https://developer.kenticocloud.com/v1/reference#content-management-api-v2).
+The function receives events from [Dispatcher](https://github.com/KenticoDocs/cloud-docs-web/wiki/Dispatcher) with the webhook data from Kentico Cloud containing workflow changes. This service then retrieves the item's whose workflow step was changed, checks the workflow step it was changed to and performs a `Cascade publish` or cascade `Scheduled publish` worflow step. The content item variant and its inner items are published/scheduled using [Content Management API](https://developer.kenticocloud.com/v1/reference#content-management-api-v2).
 
 ## Overview
+
 1. This project is a TypeScript Azure Functions application.
-2. It periodically checks content item variants in Kentico Cloud that are in specific workflow step and then publishes them. 
+2. It reacts to events from Dispatcher containing item and workflow step id from Kentico Cloud and performs cascade publish or schedule on all of the item's inner items.
 
 ## Setup
 
 ### Prerequisites
+
 1. Node (+yarn) installed
 2. Visual Studio Code installed
 3. Subscriptions on Kentico Cloud

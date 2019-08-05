@@ -9,8 +9,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.." \
 
 prepare_site_dir() {
     declare -r files=(
-        kcd-publisher-trigger
-        kcd-publisher-timer
+        EventGridTrigger
         dist
         extensions.csproj
         host.json

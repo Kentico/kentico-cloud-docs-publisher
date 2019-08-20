@@ -16,7 +16,12 @@
 		],
 		"trailing-comma": false,
 		"arrow-parens": false,
-		"array-type": false
+        "array-type": false,
+        "indent": [
+            true,
+            "tabs",
+            4
+        ]
 	},
 	"rulesDirectory": []
 }

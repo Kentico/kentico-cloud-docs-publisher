@@ -13,23 +13,23 @@
     "tslint": "tslint --project tsconfig.json"
   },
   "dependencies": {
-    "azure-eventgrid": "^1.5.0",
-    "axios": "^0.18.0",
-    "kentico-cloud-content-management": "^0.0.11",
-    "kentico-cloud-delivery": "5.7.1",
-    "node-html-parser": "^1.1.13",
-    "rxjs": "^6.4.0",
-    "url": "^0.11.0",
-    "uuid": "^3.3.2"
+    "azure-eventgrid": "1.6.0",
+    "axios": "0.19.0",
+    "kentico-cloud-content-management": "0.0.16",
+    "kentico-cloud-delivery": "6.0.0",
+    "node-html-parser": "1.1.16",
+    "rxjs": "6.5.2",
+    "url": "0.11.0",
+    "uuid": "3.3.3"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.11",
-    "@types/node": "^11.10.5",
-    "@azure/functions": "^1.0.1-beta2",
-    "@types/uuid": "^3.4.4",
-    "jest": "^24.5.0",
-    "ts-jest": "^24.0.0",
-    "tslint": "^5.13.1",
-    "typescript": "^3.3.3"
+    "@types/jest": "24.0.18",
+    "@types/node": "12.7.2",
+    "@azure/functions": "1.0.3",
+    "@types/uuid": "3.4.5",
+    "jest": "24.9.0",
+    "ts-jest": "24.0.2",
+    "tslint": "5.18.0",
+    "typescript": "3.5.3"
   }
 }

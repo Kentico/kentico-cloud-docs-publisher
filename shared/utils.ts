@@ -1,147 +1,147 @@
 import axios, { AxiosResponse } from 'axios';
 import { EventGridClient } from 'azure-eventgrid';
-import { ContentItem } from 'kentico-cloud-delivery';
+import { EventGridEvent } from 'azure-eventgrid/lib/models';
+import { LanguageVariantResponses } from 'kentico-cloud-content-management';
+import { ContentItem, Elements } from 'kentico-cloud-delivery';
 import { TopicCredentials } from 'ms-rest-azure';
+import { parse } from 'node-html-parser';
+
 import {
-  EmptyGuid,
-  EventGridKey,
-  InternalApiBaseAddress,
-  InternalDraftApiHeader,
-  NotifierEndpoint,
-  ProjectId,
-  TenMinutes,
-  WorkflowArchivedId,
-  WorkflowPublishedId,
-  WorkflowScheduledId,
+    EmptyGuid,
+    EventGridKey,
+    InternalApiBaseAddress,
+    InternalDraftApiHeader,
+    NotifierEndpoint,
+    ProjectId,
+    TenMinutes,
+    WorkflowArchivedId,
+    WorkflowPublishedId,
+    WorkflowScheduledId,
 } from './constants';
-import {
-  eventComposer,
-  publishEventsCreator,
-} from './external/eventGridClient';
+import { eventComposer, publishEventsCreator } from './external/eventGridClient';
 import { contentManagementClient } from './external/kenticoClient';
 
-const parser = require('node-html-parser');
-
 export interface IInnerItemCodenames {
-  readonly componentCodenames: string[];
-  readonly linkedItemCodenames: string[];
+    readonly componentCodenames: string[];
+    readonly linkedItemCodenames: string[];
 }
 
-export const sendNotification =
-  async (codename: string, itemId: string, errorMessage: string): Promise<void> => {
-    const errorText = `Publishing of content item **${codename}** has failed.`;
-    const errorTextEscaped = errorText.replace(/_/g, '\\\_');
+export const sendNotification = async (codename: string, itemId: string, errorMessage: string): Promise<void> => {
+    const errorText: string = `Publishing of content item **${codename}** has failed.`;
+    const errorTextEscaped: string = errorText.replace(/_/g, '\\_');
 
-    const text = `${errorTextEscaped}  ${errorMessage}: ` +
-          `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
-          `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`;
+    const text: string =
+        `${errorTextEscaped}  ${errorMessage}: ` +
+        `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
+        `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`;
 
     if (!EventGridKey || !NotifierEndpoint) {
-      throw new Error('Undefined env property provided');
+        throw new Error('Undefined env property provided');
     }
 
-    const topicCredentials = new TopicCredentials(EventGridKey);
-    const eventGridClient = new EventGridClient(topicCredentials);
-    const publishEvents = publishEventsCreator({ eventGridClient, host: NotifierEndpoint });
+    const topicCredentials: TopicCredentials = new TopicCredentials(EventGridKey);
+    const eventGridClient: EventGridClient = new EventGridClient(topicCredentials);
+    const publishEvents: (events: EventGridEvent[]) => Promise<void> = publishEventsCreator({
+        eventGridClient,
+        host: NotifierEndpoint
+    });
 
-    const event = eventComposer('Cascade publish failed.', text);
+    const event: EventGridEvent = eventComposer('Cascade publish failed.', text);
     await publishEvents([event]);
-  };
+};
 
 export const getWorkflowStepOfItem = async (codename: string): Promise<string> => {
-  const response =
-    await contentManagementClient
-      .viewLanguageVariant()
-      .byItemCodename(codename)
-      .byLanguageId(EmptyGuid)
-      .toPromise();
+    const response: LanguageVariantResponses.ViewLanguageVariantResponse = await contentManagementClient
+        .viewLanguageVariant()
+        .byItemCodename(codename)
+        .byLanguageId(EmptyGuid)
+        .toPromise();
 
-  return response.data.workflowStep.id || EmptyGuid;
+    return response.data.workflowStep.id || EmptyGuid;
 };
 
 export const getScheduledPublishTime = async (itemId: string): Promise<string> => {
-  const response = await axios({
-    headers: InternalDraftApiHeader,
-    method: 'get',
-    url: `${InternalApiBaseAddress}/item/${itemId}/variant/${EmptyGuid}`,
-  });
+    const response: AxiosResponse = await axios({
+        headers: InternalDraftApiHeader,
+        method: 'GET',
+        url: `${InternalApiBaseAddress}/item/${itemId}/variant/${EmptyGuid}`
+    });
 
-  return response.data.variant.assignment.publishScheduleTime;
+    return response.data.variant.assignment.publishScheduleTime;
 };
 
 export const isDue = async (itemId: string): Promise<boolean> => {
-  const timeToPublish = await getScheduledPublishTime(itemId);
-  const scheduledTime = new Date(timeToPublish).getTime();
-  const currentTime = Date.now();
+    const timeToPublish: string = await getScheduledPublishTime(itemId);
+    const scheduledTime: number = new Date(timeToPublish).getTime();
+    const currentTime: number = Date.now();
 
-  return scheduledTime - currentTime < TenMinutes;
+    return scheduledTime - currentTime < TenMinutes;
 };
 
 const shouldItemBePublished = async (item: ContentItem) => {
-  const itemWorkflowStep = await getWorkflowStepOfItem(item.system.codename);
-  const isPublished = itemWorkflowStep === WorkflowPublishedId;
-  const isArchived = itemWorkflowStep === WorkflowArchivedId;
-  const isScheduled = itemWorkflowStep === WorkflowScheduledId;
-  const isDueToBePublished = !isScheduled || (isScheduled && await isDue(item.system.id));
+    const itemWorkflowStep: string = await getWorkflowStepOfItem(item.system.codename);
+    const isPublished: boolean = itemWorkflowStep === WorkflowPublishedId;
+    const isArchived: boolean = itemWorkflowStep === WorkflowArchivedId;
+    const isScheduled: boolean = itemWorkflowStep === WorkflowScheduledId;
+    const isDueToBePublished: boolean = !isScheduled || (isScheduled && (await isDue(item.system.id)));
 
-  return !isPublished && !isArchived && isDueToBePublished;
+    return !isPublished && !isArchived && isDueToBePublished;
 };
 
 export const publishDefaultLanguageVariant = async (item: ContentItem | undefined): Promise<AxiosResponse | void> => {
-  if (item === undefined) {
-    return;
-  }
-
-  try {
-    if (await shouldItemBePublished(item)) {
-      await contentManagementClient
-        .publishOrScheduleLanguageVariant()
-        .byItemId(item.system.id)
-        .byLanguageId(EmptyGuid)
-        .toPromise();
+    if (item === undefined) {
+        return;
     }
-  } catch (error) {
-    await sendNotification(
-      item.system.codename,
-      item.system.id,
-      error.message,
-    );
 
-    throw error;
-  }
+    try {
+        if (await shouldItemBePublished(item)) {
+            await contentManagementClient
+                .publishOrScheduleLanguageVariant()
+                .byItemId(item.system.id)
+                .byLanguageId(EmptyGuid)
+                .withData({} as any)
+                .toPromise();
+        }
+    } catch (error) {
+        await sendNotification(item.system.codename, item.system.id, error.message);
+
+        throw error;
+    }
 };
 
 export const getRichtextChildrenCodenames = (item: ContentItem): IInnerItemCodenames => {
-  let contentOfRichtextElements = '';
+    let contentOfRichtextElements = '';
 
-  for (const elementCodename of Object.keys(item.elements)) {
-    const element = item.elements[elementCodename];
-
-    if (element.type === 'rich_text') {
-      contentOfRichtextElements = contentOfRichtextElements.concat(element.value);
+    for (const propName of Object.keys(item)) {
+        const prop = item[propName];
+        if (prop instanceof Elements.RichTextElement) {
+            const richTextElement = prop;
+            contentOfRichtextElements = contentOfRichtextElements.concat(richTextElement.value);
+        }
     }
-  }
 
-  return parseRichtextContent(contentOfRichtextElements);
+    return parseRichtextContent(contentOfRichtextElements);
 };
 
 const parseRichtextContent = (content: string): IInnerItemCodenames => {
-  const root = parser.parse(content);
-  const objectElements = root.querySelectorAll('object');
+    const root = parse(content) as any;
+    const objectElements = root.querySelectorAll('object');
 
-  const linkedItemCodenames = getInnerItemCodenames(objectElements, 'link');
-  const componentCodenames = getInnerItemCodenames(objectElements, 'component');
+    const linkedItemCodenames = getInnerItemCodenames(objectElements, 'link');
+    const componentCodenames = getInnerItemCodenames(objectElements, 'component');
 
-  return {
-    componentCodenames,
-    linkedItemCodenames,
-  };
+    return {
+        componentCodenames,
+        linkedItemCodenames
+    };
 };
 
 const getInnerItemCodenames = (elements: HTMLElement[], type: string): string[] =>
-  elements
-    .filter((objectElement: any) =>
-      objectElement.rawAttributes.type === 'application/kenticocloud' &&
-      objectElement.rawAttributes['data-type'] === 'item' &&
-      objectElement.rawAttributes['data-rel'] === type)
-    .map((objectElement: any) => objectElement.rawAttributes['data-codename']);
+    elements
+        .filter(
+            (objectElement: any) =>
+                objectElement.rawAttributes.type === 'application/kenticocloud' &&
+                objectElement.rawAttributes['data-type'] === 'item' &&
+                objectElement.rawAttributes['data-rel'] === type
+        )
+        .map((objectElement: any) => objectElement.rawAttributes['data-codename']);

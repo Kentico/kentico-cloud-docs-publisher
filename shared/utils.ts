@@ -4,7 +4,6 @@ import { EventGridEvent } from 'azure-eventgrid/lib/models';
 import { LanguageVariantResponses } from 'kentico-cloud-content-management';
 import { ContentItem, Elements } from 'kentico-cloud-delivery';
 import { TopicCredentials } from 'ms-rest-azure';
-import { parse } from 'node-html-parser';
 
 import {
     EmptyGuid,
@@ -110,38 +109,20 @@ export const publishDefaultLanguageVariant = async (item: ContentItem | undefine
 };
 
 export const getRichtextChildrenCodenames = (item: ContentItem): IInnerItemCodenames => {
-    let contentOfRichtextElements = '';
+    const innerItemCodenames: IInnerItemCodenames = {
+        componentCodenames: [],
+        linkedItemCodenames: []
+    };
 
     for (const propName of Object.keys(item)) {
         const prop = item[propName];
         if (prop instanceof Elements.RichTextElement) {
             const richTextElement = prop;
-            contentOfRichtextElements = contentOfRichtextElements.concat(richTextElement.value);
+            const richTextData = richTextElement.resolveData();
+            innerItemCodenames.componentCodenames.push(...richTextData.componentCodenames);
+            innerItemCodenames.linkedItemCodenames.push(...richTextData.linkedItemCodenames);
         }
     }
 
-    return parseRichtextContent(contentOfRichtextElements);
+    return innerItemCodenames;
 };
-
-const parseRichtextContent = (content: string): IInnerItemCodenames => {
-    const root = parse(content) as any;
-    const objectElements = root.querySelectorAll('object');
-
-    const linkedItemCodenames = getInnerItemCodenames(objectElements, 'link');
-    const componentCodenames = getInnerItemCodenames(objectElements, 'component');
-
-    return {
-        componentCodenames,
-        linkedItemCodenames
-    };
-};
-
-const getInnerItemCodenames = (elements: HTMLElement[], type: string): string[] =>
-    elements
-        .filter(
-            (objectElement: any) =>
-                objectElement.rawAttributes.type === 'application/kenticocloud' &&
-                objectElement.rawAttributes['data-type'] === 'item' &&
-                objectElement.rawAttributes['data-rel'] === type
-        )
-        .map((objectElement: any) => objectElement.rawAttributes['data-codename']);

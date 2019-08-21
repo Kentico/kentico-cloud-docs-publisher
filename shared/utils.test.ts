@@ -4,9 +4,11 @@ import {
     ElementModels,
     Elements,
     ElementType,
+    getParserAdapter,
     IContentItemConfig,
     IContentItemRawData,
     IContentItemSystemAttributes,
+    richTextResolver,
 } from 'kentico-cloud-delivery';
 
 import { getRichtextChildrenCodenames, IInnerItemCodenames } from './utils';
@@ -58,7 +60,18 @@ const constructRichTextElement = (data: {
         {
             images: [],
             links: [],
-            resolveHtmlFunc: () => ''
+            resolveRichTextFunc: () => {
+                return richTextResolver.resolveData('x', data.value, data.propertyName, {
+                    enableAdvancedLogging: false,
+                    getLinkedItem: codename => undefined,
+                    images: [],
+                    linkedItemWrapperClasses: [],
+                    linkedItemWrapperTag: 'div',
+                    links: [],
+                    queryConfig: {},
+                    richTextHtmlParser: getParserAdapter()
+                });
+            }
         }
     );
 
@@ -127,7 +140,7 @@ describe('getRichtextChildrenCodenames', () => {
                         '</object>\n' +
                         '<object ' +
                         'type="application/travis" ' +
-                        'data-type="item" ' +
+                        'data-type="unknown" ' +
                         'data-rel="link" ' +
                         'data-codename="other_app_item">' +
                         '</object>\n' +

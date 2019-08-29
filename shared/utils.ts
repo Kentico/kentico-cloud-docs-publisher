@@ -98,7 +98,7 @@ export const publishDefaultLanguageVariant = async (item: ContentItem | undefine
                 .publishOrScheduleLanguageVariant()
                 .byItemId(item.system.id)
                 .byLanguageId(EmptyGuid)
-                .withData({} as any)
+                .withData(undefined as any)
                 .toPromise();
         }
     } catch (error) {

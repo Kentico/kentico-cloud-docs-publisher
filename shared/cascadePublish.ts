@@ -1,6 +1,12 @@
-import { ContentItem, ItemResponses } from 'kentico-cloud-delivery';
+import {
+    ContentItem,
+    ItemResponses,
+} from 'kentico-cloud-delivery';
 
-import { WorkflowCascadePublishId, WorkflowScheduledId } from './constants';
+import {
+    WorkflowCascadePublishId,
+    WorkflowScheduledId,
+} from './constants';
 import { deliveryClient } from './external/kenticoClient';
 import { CodeSamples } from './models/code_samples';
 import {
@@ -8,7 +14,7 @@ import {
     getWorkflowStepOfItem,
     IInnerItemCodenames,
     isDue,
-    publishDefaultLanguageVariant
+    publishDefaultLanguageVariant,
 } from './utils';
 
 export const cascadePublish = async (): Promise<void> =>
@@ -52,22 +58,30 @@ const cascadePublishItem = async (
     linkedItems: ContentItem[],
     isComponent?: boolean
 ): Promise<void> => {
-    await publishLinkedItemsOfItem(item, linkedItems);
+    await publishChildrenItems(item, linkedItems);
 
     if (!isComponent) {
         await publishDefaultLanguageVariant(item);
     }
 };
 
-const publishLinkedItemsOfItem = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
+const publishChildrenItems = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
     const richTextChildren: IInnerItemCodenames = getRichtextChildrenCodenames(item);
-    const itemsLinkedItems: ContentItem[] = linkedItems.filter((linkedItem: ContentItem) =>
-        richTextChildren.linkedItemCodenames.includes(linkedItem.system.codename)
-    );
-    const componentItems: ContentItem[] = linkedItems.filter((linkedItem: ContentItem) =>
-        richTextChildren.componentCodenames.includes(linkedItem.system.codename)
-    );
+    const itemsLinkedItems: ContentItem[] = getItemsByCodename(linkedItems, richTextChildren.linkedItemCodenames);
+    const componentItems: ContentItem[] = getItemsByCodename(linkedItems, richTextChildren.componentCodenames);
 
+    if (item.system.type.includes('zapi')) {
+        itemsLinkedItems.push(...getModularContentItems(item, linkedItems));
+    }
+
+    await publishLinkedItems(itemsLinkedItems, linkedItems);
+
+    for (const componentItem of componentItems) {
+        await cascadePublishItem(componentItem, linkedItems, true);
+    }
+};
+
+const publishLinkedItems = async (itemsLinkedItems: ContentItem[], linkedItems: ContentItem[]) => {
     for (const linkedItem of itemsLinkedItems) {
         if (linkedItem instanceof CodeSamples) {
             await publishCodeSamples(linkedItem, linkedItems);
@@ -75,18 +89,39 @@ const publishLinkedItemsOfItem = async (item: ContentItem, linkedItems: ContentI
             await cascadePublishItem(linkedItem, linkedItems);
         }
     }
-
-    for (const componentItem of componentItems) {
-        await cascadePublishItem(componentItem, linkedItems, true);
-    }
 };
+
+const getItemsByCodename = (linkedItems: ContentItem[], richTextChildren: string[]): ContentItem[] =>
+    linkedItems.filter((linkedItem: ContentItem) =>
+        richTextChildren.includes(linkedItem.system.codename),
+    );
+
+const getModularContentItems = (item: ContentItem, linkedItems: ContentItem[]) =>
+    Object
+        .keys(item._raw.elements)
+        .map(key => item._raw.elements[key])
+        .filter((element) => element.type === 'modular_content' && element.value.length > 0)
+        .reduce(getItemsFromLinkedItemsElements(linkedItems), []);
+
+const getItemsFromLinkedItemsElements = (linkedItems: ContentItem[]) =>
+    (matchedItems, current) => {
+        const codenames = current.value as string[];
+
+        return codenames
+            .map(getMatchingContentItem(linkedItems))
+            .concat(matchedItems);
+    };
+
+const getMatchingContentItem = (linkedItems: ContentItem[]) =>
+    (codename) =>
+        linkedItems.find((contentItem) => contentItem.system.codename === codename);
 
 const publishCodeSamples = async (codeSamples: CodeSamples, linkedItems: ContentItem[]): Promise<void> => {
     await publishDefaultLanguageVariant(codeSamples);
 
-    for (const codeSampleCodename of codeSamples.elements.code_samples.value) {
+    for (const codeSampleCodename of codeSamples._raw.elements.code_samples.value) {
         const codeSample: ContentItem = linkedItems.find(
-            (linkedItem: ContentItem) => linkedItem.system.codename === codeSampleCodename
+            (linkedItem: ContentItem) => linkedItem.system.codename === codeSampleCodename,
         );
         await publishDefaultLanguageVariant(codeSample);
     }

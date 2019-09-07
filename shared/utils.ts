@@ -77,7 +77,7 @@ export const isDue = async (itemId: string): Promise<boolean> => {
     return scheduledTime - currentTime < TenMinutes;
 };
 
-const shouldItemBePublished = async (item: ContentItem) => {
+const shouldItemBePublished = async (item: ContentItem): Promise<boolean> => {
     const itemWorkflowStep: string = await getWorkflowStepOfItem(item.system.codename);
     const isPublished: boolean = itemWorkflowStep === WorkflowPublishedId;
     const isArchived: boolean = itemWorkflowStep === WorkflowArchivedId;
@@ -117,8 +117,7 @@ export const getRichtextChildrenCodenames = (item: ContentItem): IInnerItemCoden
     for (const propName of Object.keys(item)) {
         const prop = item[propName];
         if (prop instanceof Elements.RichTextElement) {
-            const richTextElement = prop;
-            const richTextData = richTextElement.resolveData();
+            const richTextData = prop.resolveData();
             innerItemCodenames.componentCodenames.push(...richTextData.componentCodenames);
             innerItemCodenames.linkedItemCodenames.push(...richTextData.linkedItemCodenames);
         }

@@ -1,4 +1,4 @@
-import EventGridClient, { EventGridModels } from 'azure-eventgrid';
+import { EventGridModels } from 'azure-eventgrid';
 
 import { eventComposer, IDeps, publishEventsCreator } from './eventGridClient';
 

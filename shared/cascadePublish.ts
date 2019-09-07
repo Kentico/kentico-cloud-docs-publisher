@@ -9,6 +9,7 @@ import {
 } from './constants';
 import { deliveryClient } from './external/kenticoClient';
 import { CodeSamples } from './models/code_samples';
+import { ProcessedCodenames } from './ProcessedCodenames';
 import {
     getRichtextChildrenCodenames,
     getWorkflowStepOfItem,
@@ -27,6 +28,8 @@ export const cascadePublish = async (): Promise<void> =>
         });
 
 const processItems = async (response: ItemResponses.ListContentItemsResponse<ContentItem>): Promise<void> => {
+    ProcessedCodenames.initialize();
+
     const linkedItemsAsArray: ContentItem[] = Object.keys(response.linkedItems).map(key => response.linkedItems[key]);
     for (const item of response.items) {
         await processItem(item, linkedItemsAsArray);
@@ -34,14 +37,16 @@ const processItems = async (response: ItemResponses.ListContentItemsResponse<Con
 };
 
 const processItem = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
-    const workflowStep: string = await getWorkflowStepOfItem(item.system.codename);
+    const codename = item.system.codename;
 
-    if (workflowStep === WorkflowCascadePublishId) {
-        await publishItemInCascadePublishStep(item, linkedItems);
-    }
-
-    if (workflowStep === WorkflowScheduledId && (await isDue(item.system.id))) {
-        await publishItemInCascadePublishStep(item, linkedItems);
+    if (!ProcessedCodenames.has(codename)) {
+        const workflowStep: string = await getWorkflowStepOfItem(codename);
+        if (workflowStep === WorkflowCascadePublishId) {
+            await publishItemInCascadePublishStep(item, linkedItems);
+        }
+        if (workflowStep === WorkflowScheduledId && (await isDue(item.system.id))) {
+            await publishItemInCascadePublishStep(item, linkedItems);
+        }
     }
 };
 
@@ -58,28 +63,57 @@ const cascadePublishItem = async (
     linkedItems: ContentItem[],
     isComponent?: boolean
 ): Promise<void> => {
-    await publishChildrenItems(item, linkedItems);
+    const codename = item.system.codename;
 
-    if (!isComponent) {
-        await publishDefaultLanguageVariant(item);
+    if (!ProcessedCodenames.has(codename)) {
+        ProcessedCodenames.add(codename);
+
+        await publishChildrenItems(item, linkedItems);
+
+        if (!isComponent) {
+            await publishDefaultLanguageVariant(item);
+        }
     }
 };
 
 const publishChildrenItems = async (item: ContentItem, linkedItems: ContentItem[]): Promise<void> => {
-    const richTextChildren: IInnerItemCodenames = getRichtextChildrenCodenames(item);
-    const itemsLinkedItems: ContentItem[] = getItemsByCodename(linkedItems, richTextChildren.linkedItemCodenames);
-    const componentItems: ContentItem[] = getItemsByCodename(linkedItems, richTextChildren.componentCodenames);
+    const { componentItems, itemsLinkedItems } = getChildrenItems(item, linkedItems);
 
-    if (item.system.type.includes('zapi')) {
-        itemsLinkedItems.push(...getModularContentItems(item, linkedItems));
-    }
+    const notProcessedLinkedItems = itemsLinkedItems.filter(
+      (linkedItem) => !ProcessedCodenames.has(linkedItem.system.codename),
+    );
 
-    await publishLinkedItems(itemsLinkedItems, linkedItems);
+    await publishLinkedItems(notProcessedLinkedItems, linkedItems);
 
     for (const componentItem of componentItems) {
         await cascadePublishItem(componentItem, linkedItems, true);
     }
 };
+
+interface IInnerItems {
+    readonly componentItems: ContentItem[];
+    readonly itemsLinkedItems: ContentItem[];
+}
+
+const getChildrenItems = (item: ContentItem, linkedItems: ContentItem[]): IInnerItems => {
+    const richTextChildren: IInnerItemCodenames = getRichtextChildrenCodenames(item);
+    const itemsLinkedItems: ContentItem[] = getItemsByCodename(linkedItems, richTextChildren.linkedItemCodenames);
+    const components: ContentItem[] = getItemsByCodename(linkedItems, richTextChildren.componentCodenames);
+
+    if (item.system.type.includes('zapi')) {
+        itemsLinkedItems.push(...getModularContentItems(item, linkedItems));
+    }
+
+    return {
+        componentItems: components,
+        itemsLinkedItems,
+    };
+};
+
+const getItemsByCodename = (linkedItems: ContentItem[], richTextChildren: string[]): ContentItem[] =>
+    linkedItems.filter((linkedItem: ContentItem) =>
+        richTextChildren.includes(linkedItem.system.codename),
+    );
 
 const publishLinkedItems = async (itemsLinkedItems: ContentItem[], linkedItems: ContentItem[]) => {
     for (const linkedItem of itemsLinkedItems) {
@@ -90,11 +124,6 @@ const publishLinkedItems = async (itemsLinkedItems: ContentItem[], linkedItems: 
         }
     }
 };
-
-const getItemsByCodename = (linkedItems: ContentItem[], richTextChildren: string[]): ContentItem[] =>
-    linkedItems.filter((linkedItem: ContentItem) =>
-        richTextChildren.includes(linkedItem.system.codename),
-    );
 
 const getModularContentItems = (item: ContentItem, linkedItems: ContentItem[]) =>
     Object

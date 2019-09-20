@@ -2,7 +2,10 @@ import axios, { AxiosResponse } from 'axios';
 import { EventGridClient } from 'azure-eventgrid';
 import { EventGridEvent } from 'azure-eventgrid/lib/models';
 import { LanguageVariantResponses } from 'kentico-cloud-content-management';
-import { ContentItem, Elements } from 'kentico-cloud-delivery';
+import {
+    ContentItem,
+    Elements,
+} from 'kentico-cloud-delivery';
 import { TopicCredentials } from 'ms-rest-azure';
 
 import {
@@ -17,13 +20,11 @@ import {
     WorkflowPublishedId,
     WorkflowScheduledId,
 } from './constants';
-import { eventComposer, publishEventsCreator } from './external/eventGridClient';
+import {
+    eventComposer,
+    publishEventsCreator,
+} from './external/eventGridClient';
 import { contentManagementClient } from './external/kenticoClient';
-
-export interface IInnerItemCodenames {
-    readonly componentCodenames: string[];
-    readonly linkedItemCodenames: string[];
-}
 
 export const sendNotification = async (codename: string, itemId: string, errorMessage: string): Promise<void> => {
     const errorText: string = `Publishing of content item **${codename}** has failed.`;
@@ -77,7 +78,7 @@ export const isDue = async (itemId: string): Promise<boolean> => {
     return scheduledTime - currentTime < TenMinutes;
 };
 
-const shouldItemBePublished = async (item: ContentItem): Promise<boolean> => {
+export const shouldItemBePublished = async (item: ContentItem): Promise<boolean> => {
     const itemWorkflowStep: string = await getWorkflowStepOfItem(item.system.codename);
     const isPublished: boolean = itemWorkflowStep === WorkflowPublishedId;
     const isArchived: boolean = itemWorkflowStep === WorkflowArchivedId;
@@ -87,31 +88,43 @@ const shouldItemBePublished = async (item: ContentItem): Promise<boolean> => {
     return !isPublished && !isArchived && isDueToBePublished;
 };
 
-export const publishDefaultLanguageVariant = async (item: ContentItem | undefined): Promise<AxiosResponse | void> => {
-    if (item === undefined) {
-        return;
+interface IInnerItems {
+    readonly childComponents: ContentItem[];
+    readonly childLinkedItems: ContentItem[];
+}
+
+export interface IInnerItemCodenames {
+    readonly componentCodenames: string[];
+    readonly linkedItemCodenames: string[];
+}
+
+export const getChildItems = (item: ContentItem, linkedItems: ContentItem[]): IInnerItems => {
+    const richTextChildren: IInnerItemCodenames = getRichtextChildCodenames(item);
+    const childLinkedItems: ContentItem[] = getItemsByCodenames(linkedItems, richTextChildren.linkedItemCodenames);
+    const components: ContentItem[] = getItemsByCodenames(linkedItems, richTextChildren.componentCodenames);
+
+    if (item.system.type.includes('zapi')) {
+        const modularContentCodenames = getModularContentCodenames(item);
+        const modularContentItems = getItemsByCodenames(linkedItems, modularContentCodenames);
+
+        childLinkedItems.push(...modularContentItems);
     }
 
-    try {
-        if (await shouldItemBePublished(item)) {
-            await contentManagementClient
-                .publishOrScheduleLanguageVariant()
-                .byItemId(item.system.id)
-                .byLanguageId(EmptyGuid)
-                .withData(undefined as any)
-                .toPromise();
-        }
-    } catch (error) {
-        await sendNotification(item.system.codename, item.system.id, error.message);
-
-        throw error;
-    }
+    return {
+        childComponents: components,
+        childLinkedItems,
+    };
 };
 
-export const getRichtextChildrenCodenames = (item: ContentItem): IInnerItemCodenames => {
+const getItemsByCodenames = (linkedItems: ContentItem[], codenames: string[]): ContentItem[] =>
+    linkedItems.filter((linkedItem: ContentItem) =>
+        codenames.includes(linkedItem.system.codename),
+    );
+
+export const getRichtextChildCodenames = (item: ContentItem): IInnerItemCodenames => {
     const innerItemCodenames: IInnerItemCodenames = {
         componentCodenames: [],
-        linkedItemCodenames: []
+        linkedItemCodenames: [],
     };
 
     for (const propName of Object.keys(item)) {
@@ -125,3 +138,12 @@ export const getRichtextChildrenCodenames = (item: ContentItem): IInnerItemCoden
 
     return innerItemCodenames;
 };
+
+const getModularContentCodenames = (item: ContentItem): string[] =>
+    Object
+        .keys(item._raw.elements)
+        .map(key => item._raw.elements[key])
+        .filter((element) => element.type === 'modular_content' && element.value.length > 0)
+        .map((modularContent) => modularContent.value)
+        .join()
+        .split(',');

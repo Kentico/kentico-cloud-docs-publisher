@@ -11,7 +11,10 @@ import {
     richTextResolver,
 } from 'kentico-cloud-delivery';
 
-import { getRichtextChildrenCodenames, IInnerItemCodenames } from './utils';
+import {
+    getRichtextChildCodenames,
+    IInnerItemCodenames,
+} from './utils';
 
 const constructItemConfig = (): IContentItemConfig => ({});
 
@@ -75,7 +78,7 @@ const constructRichTextElement = (data: {
         }
     );
 
-describe('getRichtextChildrenCodenames', () => {
+describe('getRichtextChildCodenames', () => {
     it('should return codenames of linked items and components in richtext', () => {
         const item: ContentItem = createContentItem(
             {
@@ -120,7 +123,7 @@ describe('getRichtextChildrenCodenames', () => {
             linkedItemCodenames: ['first_known_item', 'second_known_item']
         };
 
-        const result: IInnerItemCodenames = getRichtextChildrenCodenames(item);
+        const result: IInnerItemCodenames = getRichtextChildCodenames(item);
 
         assertCodenames(result, expectedCodenames);
     });
@@ -175,7 +178,7 @@ describe('getRichtextChildrenCodenames', () => {
             linkedItemCodenames: ['first_known_item', 'second_known_item']
         };
 
-        const result: IInnerItemCodenames = getRichtextChildrenCodenames(item);
+        const result: IInnerItemCodenames = getRichtextChildCodenames(item);
 
         assertCodenames(result, expectedCodenames);
     });
@@ -236,7 +239,7 @@ describe('getRichtextChildrenCodenames', () => {
             linkedItemCodenames: ['first_known_item', 'second_known_item']
         };
 
-        const result: IInnerItemCodenames = getRichtextChildrenCodenames(item);
+        const result: IInnerItemCodenames = getRichtextChildCodenames(item);
 
         assertCodenames(result, expectedCodenames);
     });
@@ -294,7 +297,7 @@ describe('getRichtextChildrenCodenames', () => {
             linkedItemCodenames: ['item_in_first_rich_text', 'item_in_second_rich_text']
         };
 
-        const result: IInnerItemCodenames = getRichtextChildrenCodenames(item);
+        const result: IInnerItemCodenames = getRichtextChildCodenames(item);
 
         assertCodenames(result, expectedCodenames);
     });

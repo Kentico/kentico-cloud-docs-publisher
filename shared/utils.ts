@@ -1,54 +1,29 @@
 import axios, { AxiosResponse } from 'axios';
-import { EventGridClient } from 'azure-eventgrid';
-import { EventGridEvent } from 'azure-eventgrid/lib/models';
 import { LanguageVariantResponses } from 'kentico-cloud-content-management';
 import {
     ContentItem,
     Elements,
 } from 'kentico-cloud-delivery';
-import { TopicCredentials } from 'ms-rest-azure';
-
 import {
     EmptyGuid,
-    EventGridKey,
     InternalApiBaseAddress,
     InternalDraftApiHeader,
-    NotifierEndpoint,
-    ProjectId,
     TenMinutes,
     WorkflowArchivedId,
     WorkflowPublishedId,
     WorkflowScheduledId,
 } from './constants';
-import {
-    eventComposer,
-    publishEventsCreator,
-} from './external/eventGridClient';
 import { contentManagementClient } from './external/kenticoClient';
 
-export const sendNotification = async (codename: string, itemId: string, errorMessage: string): Promise<void> => {
-    const errorText: string = `Publishing of content item **${codename}** has failed.`;
-    const errorTextEscaped: string = errorText.replace(/_/g, '\\_');
+interface IInnerItems {
+    readonly childComponents: ContentItem[];
+    readonly childLinkedItems: ContentItem[];
+}
 
-    const text: string =
-        `${errorTextEscaped}  ${errorMessage}: ` +
-        `[Content item in Kentico Cloud](https://app.kenticocloud.com/` +
-        `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`;
-
-    if (!EventGridKey || !NotifierEndpoint) {
-        throw new Error('Undefined env property provided');
-    }
-
-    const topicCredentials: TopicCredentials = new TopicCredentials(EventGridKey);
-    const eventGridClient: EventGridClient = new EventGridClient(topicCredentials);
-    const publishEvents: (events: EventGridEvent[]) => Promise<void> = publishEventsCreator({
-        eventGridClient,
-        host: NotifierEndpoint
-    });
-
-    const event: EventGridEvent = eventComposer('Cascade publish failed.', text);
-    await publishEvents([event]);
-};
+export interface IInnerItemCodenames {
+    readonly componentCodenames: string[];
+    readonly linkedItemCodenames: string[];
+}
 
 export const getWorkflowStepOfItem = async (codename: string): Promise<string> => {
     const response: LanguageVariantResponses.ViewLanguageVariantResponse = await contentManagementClient
@@ -58,16 +33,6 @@ export const getWorkflowStepOfItem = async (codename: string): Promise<string> =
         .toPromise();
 
     return response.data.workflowStep.id || EmptyGuid;
-};
-
-export const getScheduledPublishTime = async (itemId: string): Promise<string> => {
-    const response: AxiosResponse = await axios({
-        headers: InternalDraftApiHeader,
-        method: 'GET',
-        url: `${InternalApiBaseAddress}/item/${itemId}/variant/${EmptyGuid}`
-    });
-
-    return response.data.variant.assignment.publishScheduleTime;
 };
 
 export const isDue = async (itemId: string): Promise<boolean> => {
@@ -88,16 +53,6 @@ export const shouldItemBePublished = async (item: ContentItem): Promise<boolean>
     return !isPublished && !isArchived && isDueToBePublished;
 };
 
-interface IInnerItems {
-    readonly childComponents: ContentItem[];
-    readonly childLinkedItems: ContentItem[];
-}
-
-export interface IInnerItemCodenames {
-    readonly componentCodenames: string[];
-    readonly linkedItemCodenames: string[];
-}
-
 export const getChildItems = (item: ContentItem, linkedItems: ContentItem[]): IInnerItems => {
     const richTextChildren: IInnerItemCodenames = getRichtextChildCodenames(item);
     const childLinkedItems: ContentItem[] = getItemsByCodenames(linkedItems, richTextChildren.linkedItemCodenames);
@@ -116,10 +71,15 @@ export const getChildItems = (item: ContentItem, linkedItems: ContentItem[]): II
     };
 };
 
-const getItemsByCodenames = (linkedItems: ContentItem[], codenames: string[]): ContentItem[] =>
-    linkedItems.filter((linkedItem: ContentItem) =>
-        codenames.includes(linkedItem.system.codename),
-    );
+const getScheduledPublishTime = async (itemId: string): Promise<string> => {
+    const response: AxiosResponse = await axios({
+        headers: InternalDraftApiHeader,
+        method: 'GET',
+        url: `${InternalApiBaseAddress}/item/${itemId}/variant/${EmptyGuid}`
+    });
+
+    return response.data.variant.assignment.publishScheduleTime;
+};
 
 export const getRichtextChildCodenames = (item: ContentItem): IInnerItemCodenames => {
     const innerItemCodenames: IInnerItemCodenames = {
@@ -147,3 +107,8 @@ const getModularContentCodenames = (item: ContentItem): string[] =>
         .map((modularContent) => modularContent.value)
         .join()
         .split(',');
+
+const getItemsByCodenames = (linkedItems: ContentItem[], codenames: string[]): ContentItem[] =>
+    linkedItems.filter((linkedItem: ContentItem) =>
+        codenames.includes(linkedItem.system.codename),
+    );

@@ -13,6 +13,6 @@ export const WorkflowScheduledId: string = process.env['KC.Step.ScheduledPublish
 export const WorkflowPublishedId: string = process.env['KC.Step.PublishId'];
 export const WorkflowArchivedId: string = process.env['KC.Step.ArchivedId'];
 
-export const InternalApiBaseAddress: string = `https://app.kenticocloud.com/api/project/${ProjectId}`;
+export const InternalApiBaseAddress: string = `https://app.kontent.ai/api/project/${ProjectId}`;
 
 export const InternalDraftApiHeader = { Authorization: `Bearer ${process.env['KC.InternalApiToken']}` };

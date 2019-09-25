@@ -1,9 +1,7 @@
-import { AxiosResponse } from 'axios';
 import {
     ContentItem,
     ItemResponses,
 } from 'kentico-cloud-delivery';
-
 import {
     EmptyGuid,
     WorkflowCascadePublishId,
@@ -15,11 +13,11 @@ import {
 } from './external/kenticoClient';
 import { CodeSamples } from './models/code_samples';
 import { ProcessedCodenames } from './ProcessedCodenames';
+import { sendNotification } from './sendNotification';
 import {
     getChildItems,
     getWorkflowStepOfItem,
     isDue,
-    sendNotification,
     shouldItemBePublished,
 } from './utils';
 
@@ -92,7 +90,7 @@ const cascadePublishItem = async (
     }
 };
 
-const publishDefaultLanguageVariant = async (item: ContentItem | undefined): Promise<AxiosResponse | void> => {
+const publishDefaultLanguageVariant = async (item: ContentItem | undefined): Promise<void> => {
     if (item === undefined) {
         return;
     }
@@ -117,7 +115,7 @@ const publishChildItems = async (item: ContentItem, linkedItems: ContentItem[]):
     const { childComponents, childLinkedItems } = getChildItems(item, linkedItems);
 
     const notProcessedLinkedItems = childLinkedItems.filter(
-      (linkedItem) => !ProcessedCodenames.has(linkedItem.system.codename),
+        (linkedItem) => !ProcessedCodenames.has(linkedItem.system.codename),
     );
 
     await publishLinkedItems(notProcessedLinkedItems, linkedItems);

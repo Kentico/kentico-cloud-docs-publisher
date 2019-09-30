@@ -1,5 +1,5 @@
 export const EmptyGuid: string = '00000000-0000-0000-0000-000000000000';
-export const TenMinutes: number = 600000;
+export const TwentyMinutes: number = 1200000;
 
 export const ProjectId: string = process.env['KC.ProjectId'] || '';
 export const PreviewApiKey: string = process.env['KC.PreviewApiKey'] || '';

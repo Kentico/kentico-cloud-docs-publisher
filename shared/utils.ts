@@ -8,7 +8,7 @@ import {
     EmptyGuid,
     InternalApiBaseAddress,
     InternalDraftApiHeader,
-    TenMinutes,
+    TwentyMinutes,
     WorkflowArchivedId,
     WorkflowPublishedId,
     WorkflowScheduledId,
@@ -40,7 +40,7 @@ export const isDue = async (itemId: string): Promise<boolean> => {
     const scheduledTime: number = new Date(timeToPublish).getTime();
     const currentTime: number = Date.now();
 
-    return scheduledTime - currentTime < TenMinutes;
+    return scheduledTime - currentTime < TwentyMinutes;
 };
 
 export const shouldItemBePublished = async (item: ContentItem): Promise<boolean> => {

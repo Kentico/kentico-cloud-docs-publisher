@@ -1,13 +1,12 @@
-const {
-    eventComposer,
-    publishEventsCreator,
-} = require('./eventGridClient');
+import { EventGridModels } from 'azure-eventgrid';
+
+import { eventComposer, IDeps, publishEventsCreator } from './eventGridClient';
 
 describe('eventComposer', () => {
     test('composes event with data of notification', async () => {
-        const activityTitle = 'activity title';
-        const text = 'notification text';
-        const event = eventComposer(activityTitle, text);
+        const activityTitle: string = 'activity title';
+        const text: string = 'notification text';
+        const event: EventGridModels.EventGridEvent = eventComposer(activityTitle, text);
 
         expect(event.id).toBeTruthy();
         expect(event.subject).toBeTruthy();
@@ -20,26 +19,30 @@ describe('eventComposer', () => {
     });
 });
 
-const eventGridClient = {
-    publishEvents: jest.fn(),
+const eventGridClient: any = {
+    publishEvents: jest.fn()
 };
-const host = 'fake.url-to-webhook.cloud';
-const fakeHost = `http://${host}/api/webhook`;
-const events = [
+
+const host: string = 'fake.url-to-webhook.cloud';
+const fakeHost: string = `http://${host}/api/webhook`;
+const events: EventGridModels.EventGridEvent[] = [
     {
         data: { xxx: 'xxx' },
         dataVersion: '1.0',
         eventTime: new Date(),
         eventType: 'test_event',
+        id: 'x',
+        metadataVersion: undefined,
         subject: 'test',
-    },
+        topic: undefined
+    }
 ];
 
 describe('publishEvents', () => {
     test('calls publishEvents with correct host and events', async () => {
-        const deps = {
+        const deps: IDeps = {
             eventGridClient,
-            host: fakeHost,
+            host: fakeHost
         };
 
         await publishEventsCreator(deps)(events);

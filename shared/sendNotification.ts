@@ -18,7 +18,7 @@ export const sendNotification = async (codename: string, itemId: string, errorMe
 
     const text: string =
         `${errorTextEscaped}  ${errorMessage}: ` +
-        `[Content item in Kentico Cloud](https://app.kontent.ai/` +
+        `[Content item in Kentico Kontent](https://app.kontent.ai/` +
         `${ProjectId}/content-inventory/${EmptyGuid}/content/${itemId})`;
 
     if (!EventGridKey || !NotifierEndpoint) {

@@ -1,23 +1,23 @@
-| [master](https://github.com/Kentico/kentico-cloud-docs-search/tree/master) | [develop](https://github.com/Kentico/kentico-cloud-docs-search/tree/develop) |
+| [master](https://github.com/KenticoDocs/kontent-docs-publisher/tree/master) | [develop](https://github.com/KenticoDocs/kontent-docs-publisher/tree/develop) |
 |:---:|:---:|
-| [![Build Status](https://travis-ci.com/KenticoDocs/cloud-docs-publisher.svg?branch=master)](https://travis-ci.com/KenticoDocs/cloud-docs-publisher) [![codebeat badge](https://codebeat.co/badges/ad12c4ef-caec-4f17-900e-9641efa33ccb)](https://codebeat.co/projects/github-com-kenticodocs-cloud-docs-publisher-master) | [![Build Status](https://travis-ci.com/KenticoDocs/cloud-docs-dispatcher.svg?branch=develop)](https://travis-ci.com/KenticoDocs/cloud-docs-dispatcher) [![codebeat badge](https://codebeat.co/badges/ed1f8296-9732-4085-ae84-7a36b405b3cd)](https://codebeat.co/projects/github-com-kenticodocs-cloud-docs-publisher-develop) |
+| [![Build Status](https://travis-ci.com/KenticoDocs/kontent-docs-publisher.svg?branch=master)](https://travis-ci.com/KenticoDocs/kontent-docs-publisher) | [![Build Status](https://travis-ci.com/KenticoDocs/kontent-docs-publisher.svg?branch=develop)](https://travis-ci.com/KenticoDocs/kontent-docs-publisher) |
 
-# Kentico Cloud Documentation - Publisher
+# Kentico Kontent Documentation - Publisher
 
-Backend function for Kentico Cloud documentation portal, which utilizes [Kentico Cloud](https://app.kenticocloud.com/) as a source of its content.
+Backend function for Kentico Kontent documentation portal, which utilizes [Kentico Kontent](https://app.kontent.ai/) as a source of its data.
 
-The function periodically checks content item variants in Kentico Cloud that are in a `Cascade publish` or `Scheduled publish` worflow step. These content item variants and their inner items are then automatically published using [Content Management API](https://developer.kenticocloud.com/v1/reference#content-management-api-v2).
+The function periodically checks content item variants in Kentico Kontent that are in a `Cascade publish` or `Scheduled publish` worflow step. These content item variants and their inner items are then automatically published using [Content Management API](https://docs.kontent.ai/reference/content-management-api-v2).
 
 ## Overview
 1. This project is a TypeScript Azure Functions application.
-2. It periodically checks content item variants in Kentico Cloud that are in specific workflow step and then publishes them. 
+2. It periodically checks content item variants in Kentico Kontent that are in specific workflow step and then publishes them. 
 
 ## Setup
 
 ### Prerequisites
 1. Node (+yarn) installed
 2. Visual Studio Code installed
-3. Subscriptions on Kentico Cloud
+3. Subscriptions on Kentico Kontent
 
 ### Instructions
 1. Open Visual Studio Code and install the prerequisites according to the [following steps](https://code.visualstudio.com/tutorials/functions-extension/getting-started).
@@ -28,10 +28,10 @@ The function periodically checks content item variants in Kentico Cloud that are
 6. Deploy to Azure using Azure Functions extension tab, or run locally by pressing `Ctrl + F5` in Visual Studio Code.
 
 #### Required Keys
-* `KC.ProjectId` - Kentico Cloud project ID
-* `KC.ContentManagementApiKey` - Kentico Cloud Content Management API key
-* `KC.PreviewApiKey` - Kentico Cloud Delivery Preview API key
-* `KC.InternalApiToken` - Kentico Cloud Authorization token
+* `KC.ProjectId` - Kentico Kontent project ID
+* `KC.ContentManagementApiKey` - Kentico Kontent Content Management API key
+* `KC.PreviewApiKey` - Kentico Kontent Delivery Preview API key
+* `KC.InternalApiToken` - Kentico Kontent Authorization token
 * `KC.Step.ArchivedId` - Id of Archived workflow step
 * `KC.Step.CascadePublishId` - Id of Cascade publish workflow step
 * `KC.Step.PublishId` - Id of Publish workflow step
